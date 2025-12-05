@@ -1,0 +1,45 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    line-height: 1.6;
+}
+
+h1 {
+    color: #333;
+    text-align: center;
+}
+
+#countries {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+}
+
+.country {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    width: 200px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: #f9f9f9;
+    text-align: center;
+}
+
+.country h2 {
+    margin-top: 0;
+    color: #2c3e50;
+    font-size: 1.2em;
+}
+
+.country img {
+    width: 50px;
+    height: auto;
+    border: 1px solid #ddd;
+}
+
+.country p {
+    margin: 5px 0;
+    color: #555;
+    text-align: left;
+}
