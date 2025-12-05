@@ -1,0 +1,14 @@
+#erreur {
+    color: white;
+    background-color: red;
+    padding: 8px;
+    display: none;
+    /* caché par défaut */
+    margin-top: 10px;
+}
+
+#resultat {
+    font-weight: bold;
+    margin-top: 10px;
+    display: block;
+}
