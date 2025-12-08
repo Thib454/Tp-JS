@@ -1,0 +1,16 @@
+{
+  "utilisateurs": [
+    {
+      "id": 1,
+      "nom": "Dupont",
+      "prenom": "Jean",
+      "dateNaissance": "1990-01-10",
+      "lieuNaissance": "Lyon",
+      "departementNaissance": "69",
+      "numeroRue": "12",
+      "libelleRue": "Rue de la Paix",
+      "codePostal": "69001",
+      "ville": "Lyon"
+    }
+  ]
+}

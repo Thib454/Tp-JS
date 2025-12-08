@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>TP - Gestion des utilisateurs</title>
+    <script src="modale-view.js" defer></script>
+    <style>
+        body {
+            font-family: Arial;
+            padding: 20px;
+            background: #f3f3f3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 8px;
+        }
+
+        th {
+            background: #0275d8;
+            color: white;
+        }
+
+        .btn {
+            padding: 8px 14px;
+            background: #0275d8;
+            color: white;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .trash,
+        .edit {
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .trash {
+            color: #dc3545;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Gestion des utilisateurs</h1>
+    <button class="btn" onclick="openModale('modale-create')">+ Ajouter</button>
+
+    <table id="table-users">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Date naissance</th>
+                <th>Lieu naissance</th>
+                <th>Adresse</th>
+                <th>Supprimer</th>
+                <th>Modifier</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <!-- MODALE CREATION -->
+    <modale-view id="modale-create" modale-width="30%">
+        <div slot="title" header-color="#0275d8">Créer un utilisateur</div>
+        <div slot="body">
+            <div id="create-error" style="color:red"></div>
+            <label>Nom :</label><br><input id="c-nom"><br><br>
+            <label>Prénom :</label><br><input id="c-prenom"><br><br>
+            <label>Genre :</label><br><select id="c-genre">
+                <option>H</option>
+                <option>F</option>
+            </select><br><br>
+            <label>Date naissance :</label><br><input id="c-dateNaissance" type="date"><br><br>
+            <label>Lieu naissance :</label><br><input id="c-lieuNaissance"><br><br>
+            <label>Département naissance :</label><br><input id="c-departementNaissance"><br><br>
+            <label>Numéro rue :</label><br><input id="c-numeroRue"><br><br>
+            <label>Libellé rue :</label><br><input id="c-libelleRue"><br><br>
+            <label>Code postal :</label><br><input id="c-codePostal"><br><br>
+            <label>Ville :</label><br><input id="c-ville"><br><br>
+        </div>
+        <div slot="footer">
+            <button class="btn btn-danger" onclick="closeModale('modale-create')">Annuler</button>
+            <button class="btn" onclick="creerUtilisateur()">Valider</button>
+        </div>
+    </modale-view>
+
+    <!-- MODALE EDITION -->
+    <modale-view id="modale-edit" modale-width="30%">
+        <div slot="title" header-color="#0275d8">Modifier un utilisateur</div>
+        <div slot="body">
+            <div id="edit-error" style="color:red"></div>
+            <label>Nom :</label><br><input id="e-nom"><br><br>
+            <label>Prénom :</label><br><input id="e-prenom"><br><br>
+            <label>Genre :</label><br><select id="e-genre">
+                <option>H</option>
+                <option>F</option>
+            </select><br><br>
+            <label>Date naissance :</label><br><input id="e-dateNaissance" type="date"><br><br>
+            <label>Lieu naissance :</label><br><input id="e-lieuNaissance"><br><br>
+            <label>Département naissance :</label><br><input id="e-departementNaissance"><br><br>
+            <label>Numéro rue :</label><br><input id="e-numeroRue"><br><br>
+            <label>Libellé rue :</label><br><input id="e-libelleRue"><br><br>
+            <label>Code postal :</label><br><input id="e-codePostal"><br><br>
+            <label>Ville :</label><br><input id="e-ville"><br><br>
+        </div>
+        <div slot="footer">
+            <button class="btn btn-danger" onclick="closeModale('modale-edit')">Annuler</button>
+            <button class="btn" onclick="modifierUtilisateur()">Valider</button>
+        </div>
+    </modale-view>
+
+    <!-- MODALE SUPPRESSION -->
+    <modale-view id="modale-delete" modale-width="20%">
+        <div slot="title" header-color="#dc3545">Supprimer</div>
+        <div slot="body">Voulez-vous vraiment supprimer cet utilisateur ?</div>
+        <div slot="footer">
+            <button class="btn" onclick="closeModale('modale-delete')">Annuler</button>
+            <button class="btn btn-danger" onclick="supprimerUtilisateur()">Supprimer</button>
+        </div>
+    </modale-view>
+
+    <script>
+        const ID_CREATEUR = "Le_King_of_Javascript";
+        const urlBase = "http://localhost:3000/utilisateurs";
+        let idAModifier = null;
+        let idASupprimer = null;
+
+        /* ------------------------------------------------------
+           CHARGER UTILISATEURS
+        ------------------------------------------------------ */
+        async function chargerUtilisateurs() {
+            const data = await fetch(urlBase).then(r => r.json());
+            const tbody = document.querySelector("#table-users tbody");
+            tbody.innerHTML = "";
+            data.forEach(u => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+<td>${u.id}</td>
+<td>${u.nom}</td>
+<td>${u.prenom}</td>
+<td>${u.dateNaissance}</td>
+<td>${u.lieuNaissance}</td>
+<td>${u.numeroRue} ${u.libelleRue}, ${u.codePostal} ${u.ville}</td>
+<td><span class="trash" onclick="confirmDelete(${u.id})">🗑️</span></td>
+<td><span class="edit" onclick="confirmEdit(${u.id})">✏️</span></td>
+        `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        /* ------------------------------------------------------
+           CREER UTILISATEUR
+        ------------------------------------------------------ */
+        async function creerUtilisateur() {
+            const utilisateur = {
+                idCreateur: ID_CREATEUR,
+                nom: document.getElementById("c-nom").value,
+                prenom: document.getElementById("c-prenom").value,
+                genre: document.getElementById("c-genre").value,
+                dateNaissance: document.getElementById("c-dateNaissance").value,
+                lieuNaissance: document.getElementById("c-lieuNaissance").value,
+                departementNaissance: document.getElementById("c-departementNaissance").value,
+                numeroRue: document.getElementById("c-numeroRue").value,
+                libelleRue: document.getElementById("c-libelleRue").value,
+                codePostal: document.getElementById("c-codePostal").value,
+                ville: document.getElementById("c-ville").value
+            };
+            const resp = await fetch(urlBase, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(utilisateur)
+            });
+            if (!resp.ok) {
+                document.getElementById("create-error").textContent = "Erreur : " + await resp.text();
+                return;
+            }
+            closeModale("modale-create");
+            chargerUtilisateurs();
+        }
+
+        /* ------------------------------------------------------
+           MODIFIER UTILISATEUR
+        ------------------------------------------------------ */
+        function confirmEdit(id) {
+            idAModifier = id;
+            fetch(`${urlBase}/${id}`)
+                .then(r => r.json())
+                .then(u => {
+                    document.getElementById("e-nom").value = u.nom;
+                    document.getElementById("e-prenom").value = u.prenom;
+                    document.getElementById("e-genre").value = u.genre;
+                    document.getElementById("e-dateNaissance").value = u.dateNaissance;
+                    document.getElementById("e-lieuNaissance").value = u.lieuNaissance;
+                    document.getElementById("e-departementNaissance").value = u.departementNaissance;
+                    document.getElementById("e-numeroRue").value = u.numeroRue;
+                    document.getElementById("e-libelleRue").value = u.libelleRue;
+                    document.getElementById("e-codePostal").value = u.codePostal;
+                    document.getElementById("e-ville").value = u.ville;
+                });
+            openModale("modale-edit");
+        }
+
+        async function modifierUtilisateur() {
+            if (!idAModifier) return;
+            const utilisateur = {
+                nom: document.getElementById("e-nom").value,
+                prenom: document.getElementById("e-prenom").value,
+                genre: document.getElementById("e-genre").value,
+                dateNaissance: document.getElementById("e-dateNaissance").value,
+                lieuNaissance: document.getElementById("e-lieuNaissance").value,
+                departementNaissance: document.getElementById("e-departementNaissance").value,
+                numeroRue: document.getElementById("e-numeroRue").value,
+                libelleRue: document.getElementById("e-libelleRue").value,
+                codePostal: document.getElementById("e-codePostal").value,
+                ville: document.getElementById("e-ville").value
+            };
+            const resp = await fetch(`${urlBase}/${idAModifier}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(utilisateur)
+            });
+            if (!resp.ok) {
+                document.getElementById("edit-error").textContent = "Erreur : " + await resp.text();
+                return;
+            }
+            closeModale("modale-edit");
+            chargerUtilisateurs();
+        }
+
+        /* ------------------------------------------------------
+           SUPPRESSION UTILISATEUR
+        ------------------------------------------------------ */
+        function confirmDelete(id) { idASupprimer = id; openModale("modale-delete"); }
+        async function supprimerUtilisateur() {
+            await fetch(`${urlBase}/${idASupprimer}`, { method: "DELETE" });
+            closeModale("modale-delete");
+            chargerUtilisateurs();
+        }
+
+        /* ------------------------------------------------------
+           INITIALISATION
+        ------------------------------------------------------ */
+        chargerUtilisateurs();
+    </script>
+
+</body>
+
+</html>
