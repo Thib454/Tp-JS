@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>TP 10 - Gestion des utilisateurs</title>
+ 
+<script src="modale-view.js" defer></script>
+ 
+<style>
+    body{
+        font-family: Arial;
+        padding:20px;
+        background:#f3f3f3;
+    }
+    table{
+        width:100%;
+        border-collapse: collapse;
+        margin-top:20px;
+        background:white;
+    }
+    th, td{
+        border:1px solid #ccc;
+        padding:8px;
+    }
+    th{
+        background:#0275d8;
+        color:white;
+    }
+    .btn{
+        padding:8px 14px;
+        background:#0275d8;
+        color:white;
+        cursor:pointer;
+        border:none;
+        border-radius:4px;
+    }
+    .btn-danger{
+        background:#dc3545;
+    }
+    .trash{
+        cursor:pointer;
+        color:#dc3545;
+        font-size:20px;
+    }
+</style>
+ 
+</head>
+<body>
+ 
+<h1>Gestion des utilisateurs</h1>
+ 
+<button class="btn" onclick="openModale('modale-create')">+ Ajouter</button>
+ 
+<table id="table-users">
+<thead>
+<tr>
+<th>ID</th>
+<th>Nom</th>
+<th>Prénom</th>
+<th>Date naissance</th>
+<th>Lieu naissance</th>
+<th>Adresse</th>
+<th>Supprimer</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+ 
+ 
+<!-- ----------------------------------------------------- -->
+<!-- MODALE : CREATION UTILISATEUR                         -->
+<!-- ----------------------------------------------------- -->
+<modale-view id="modale-create" modale-width="30%">
+<div slot="title" header-color="#0275d8">Créer un utilisateur</div>
+ 
+    <div slot="body">
+<div id="create-error" style="color:red"></div>
+ 
+        <label>Nom :</label><br>
+<input id="c-nom"><br><br>
+ 
+        <label>Prénom :</label><br>
+<input id="c-prenom"><br><br>
+ 
+        <label>Genre :</label><br>
+<select id="c-genre">
+<option>H</option>
+<option>F</option>
+</select><br><br>
+ 
+        <label>Date naissance :</label><br>
+<input id="c-dateNaissance" type="date"><br><br>
+ 
+        <label>Lieu naissance :</label><br>
+<input id="c-lieuNaissance"><br><br>
+ 
+        <label>Département naissance :</label><br>
+<input id="c-departementNaissance"><br><br>
+ 
+        <label>Numéro rue :</label><br>
+<input id="c-numeroRue"><br><br>
+ 
+        <label>Libellé rue :</label><br>
+<input id="c-libelleRue"><br><br>
+ 
+        <label>Code postal :</label><br>
+<input id="c-codePostal"><br><br>
+ 
+        <label>Ville :</label><br>
+<input id="c-ville"><br><br>
+</div>
+ 
+    <div slot="footer">
+<button class="btn btn-danger" onclick="closeModale('modale-create')">Annuler</button>
+<button class="btn" onclick="creerUtilisateur()">Valider</button>
+</div>
+</modale-view>
+ 
+ 
+ 
+<!-- ----------------------------------------------------- -->
+<!-- MODALE SUPPRESSION                                    -->
+<!-- ----------------------------------------------------- -->
+<modale-view id="modale-delete" modale-width="20%">
+<div slot="title" header-color="#dc3545">Supprimer</div>
+<div slot="body">
+        Voulez-vous vraiment supprimer cet utilisateur ?
+</div>
+<div slot="footer">
+<button class="btn" onclick="closeModale('modale-delete')">Annuler</button>
+<button class="btn btn-danger" onclick="supprimerUtilisateur()">Supprimer</button>
+</div>
+</modale-view>
+ 
+ 
+<script>
+/* ------------------------------------------------------
+   CONFIG
+------------------------------------------------------ */
+const ID_CREATEUR = "MON_NOM";   // ⚠️ METTRE VOTRE NOM
+let idASupprimer = null;
+ 
+ 
+/* ------------------------------------------------------
+   CHARGER UTILISATEURS
+------------------------------------------------------ */
+async function chargerUtilisateurs(){
+    const url = `https://digicode.cleverapps.io/utilisateurs/${ID_CREATEUR}`;
+    const data = await fetch(url).then(r => r.json());
+ 
+    const tbody = document.querySelector("#table-users tbody");
+    tbody.innerHTML = "";
+ 
+    data.forEach(u => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+<td>${u.id}</td>
+<td>${u.nom}</td>
+<td>${u.prenom}</td>
+<td>${u.dateNaissance}</td>
+<td>${u.lieuNaissance}</td>
+<td>${u.numeroRue} ${u.libelleRue}, ${u.codePostal} ${u.ville}</td>
+<td><span class="trash" onclick="confirmDelete(${u.id})">🗑️</span></td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+ 
+ 
+/* ------------------------------------------------------
+   CREATION UTILISATEUR
+------------------------------------------------------ */
+async function creerUtilisateur(){
+ 
+    const utilisateur = {
+        idCreateur : ID_CREATEUR,
+        nom : document.getElementById("c-nom").value,
+        prenom : document.getElementById("c-prenom").value,
+        genre : document.getElementById("c-genre").value,
+        dateNaissance : document.getElementById("c-dateNaissance").value,
+        lieuNaissance : document.getElementById("c-lieuNaissance").value,
+        departementNaissance : document.getElementById("c-departementNaissance").value,
+        numeroRue : document.getElementById("c-numeroRue").value,
+        libelleRue : document.getElementById("c-libelleRue").value,
+        codePostal : document.getElementById("c-codePostal").value,
+        ville : document.getElementById("c-ville").value
+    };
+ 
+    const resp = await fetch("https://digicode.cleverapps.io/utilisateurs/", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify(utilisateur)
+    });
+ 
+    if(!resp.ok){
+        document.getElementById("create-error").textContent = "Erreur : " + await resp.text();
+        return;
+    }
+ 
+    closeModale("modale-create");
+    chargerUtilisateurs();
+}
+ 
+ 
+/* ------------------------------------------------------
+   SUPPRESSION (modale + requête)
+------------------------------------------------------ */
+function confirmDelete(id){
+    idASupprimer = id;
+    openModale("modale-delete");
+}
+ 
+async function supprimerUtilisateur(){
+    const url = `https://digicode.cleverapps.io/utilisateurs/${ID_CREATEUR}/${idASupprimer}`;
+ 
+    await fetch(url, {method:"DELETE"});
+ 
+    closeModale("modale-delete");
+    chargerUtilisateurs();
+}
+ 
+ 
+/* ------------------------------------------------------
+   Lancement auto
+------------------------------------------------------ */
+chargerUtilisateurs();
+ 
+</script>
+ 
+</body>
+</html>
